@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class UInputAction;
+struct FInputActionValue;
+class UInputMappingContext;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -24,6 +28,17 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComponent;
 
+	// Input Variables
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputMappingContext> InputMapping;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> JumpAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> LookAction;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -33,6 +48,19 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+protected:
+	// Inputs Functions
 
+	/** Called for movement input **/
+	void Move(const FInputActionValue& Value);
+	
+	/** Called for turning and camera movement **/
+	void Look(const FInputActionValue& Value);
+	
+	/** Called for jumping **/
+	virtual void Jump() override;
+
+	
 
 };
