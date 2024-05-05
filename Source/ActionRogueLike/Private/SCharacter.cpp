@@ -9,6 +9,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Libraries/DebugUtilityFunctions.h"
 
 
@@ -22,9 +24,16 @@ ASCharacter::ASCharacter()
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(GetRootComponent());
-
+	// Looking and camera behavior
+	SpringArmComponent->bUsePawnControlRotation = false;
+	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
+
+	// Movement Behavior
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
 	
 }
 
@@ -75,16 +84,25 @@ void ASCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D MovementAxisValue = Value.Get<FVector2D>();
 
+	// We want the control rotation because we want to orient the rotation to the character's movement
+	// Instead of using the character's forward vector we use the rotation and convert it to a vector
+	FRotator ControlRotation = GetControlRotation();
+	ControlRotation.Pitch = 0.0f;
+	ControlRotation.Roll = 0.0f;
+	
 	// Simpler way
+	// Moving Forward and Back
 	if(GetController() && (MovementAxisValue.X != 0.0f))
 	{
-		const FVector Forward = GetActorForwardVector();
-		AddMovementInput(Forward, MovementAxisValue.X);
+		AddMovementInput(ControlRotation.Vector(), MovementAxisValue.X);
 	}
+	// Moving Left and Right
 	if(GetController() && (MovementAxisValue.Y != 0.0f))
 	{
-		const FVector Right = GetActorRightVector();
-		AddMovementInput(Right, MovementAxisValue.Y);
+		const FVector RightVector = UKismetMathLibrary::GetRightVector(ControlRotation);
+		// Another way of getting the right vector
+		// const FVector RightVector = FRotationMatrix(ControlRotation).GetScaleAxis(EAxis::Y);
+		AddMovementInput(RightVector, MovementAxisValue.Y);
 	}
 	
 	// By finding getting the forward vector using the Yaw rotation of the character
