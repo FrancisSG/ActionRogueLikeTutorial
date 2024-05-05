@@ -28,6 +28,11 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComponent;
 
+	// References
+
+	UPROPERTY(EditAnywhere, Category = "References")
+	TSubclassOf<AActor> ProjectileClass;
+	
 	// Input Variables
 	
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -38,6 +43,8 @@ protected:
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AttackAction;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -61,6 +68,7 @@ protected:
 	/** Called for jumping **/
 	virtual void Jump() override;
 
-	
+	/** Called when attacking **/
+	virtual void Attack(const FInputActionValue& Value);
 
 };

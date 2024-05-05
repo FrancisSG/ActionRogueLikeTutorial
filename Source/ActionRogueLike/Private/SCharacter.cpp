@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Libraries/DebugUtilityFunctions.h"
+#include "Libraries/DebugMacros.h"
 
 
 
@@ -55,7 +56,7 @@ void ASCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Error! - SCharacter - PlayerController is not valid!"));
 	}
-	DebugUtilityFunctions::RunConsoleCommand(FString("ShowDebug EnhancedInput"), GetWorld());
+	// DebugUtilityFunctions::RunConsoleCommand(FString("ShowDebug EnhancedInput"), GetWorld());
 
 }
 
@@ -76,6 +77,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASCharacter::Move);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASCharacter::Jump);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASCharacter::Look);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASCharacter::Attack);
 	}
 
 }
@@ -129,5 +131,20 @@ void ASCharacter::Look(const FInputActionValue& Value)
 void ASCharacter::Jump()
 {
 	Super::Jump();
+}
+
+void ASCharacter::Attack(const FInputActionValue& Value)
+{
+
+	const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
+	
+	const FTransform SpawnTM = FTransform(GetControlRotation(),SpawnLocation);
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	
+	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	
 }
 
