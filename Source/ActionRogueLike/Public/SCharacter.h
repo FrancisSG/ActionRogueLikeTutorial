@@ -7,7 +7,9 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class USInteractionComponent;
 class UInputAction;
+class UAnimMontage;
 struct FInputActionValue;
 class UInputMappingContext;
 class USpringArmComponent;
@@ -28,10 +30,15 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USInteractionComponent> InteractionComponent;
 	// References
 
 	UPROPERTY(EditAnywhere, Category = "References")
 	TSubclassOf<AActor> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TObjectPtr<UAnimMontage> AttackAnim;
 	
 	// Input Variables
 	
@@ -45,6 +52,10 @@ protected:
 	TObjectPtr<UInputAction> LookAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> InteractAction;
+
+	FTimerHandle TimerHandle_PrimaryAttack;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -57,6 +68,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 protected:
+	void PrimaryAttack_TimeElapsed() const;
+	
 	// Inputs Functions
 
 	/** Called for movement input **/
@@ -71,4 +84,6 @@ protected:
 	/** Called when attacking **/
 	virtual void Attack(const FInputActionValue& Value);
 
+	/** Called when pressing the interact key **/
+	virtual void Interact(const FInputActionValue& Value);
 };

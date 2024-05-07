@@ -35,6 +35,9 @@ protected:
 
 	UFUNCTION()
 	virtual void CleanUpBarrel();
+
+	UFUNCTION()
+	virtual void PostInitializeComponents() override;
 	
 public:	
 	// Called every frame

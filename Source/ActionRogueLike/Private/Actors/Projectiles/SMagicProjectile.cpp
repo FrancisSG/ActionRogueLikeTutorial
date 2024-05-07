@@ -19,9 +19,9 @@ ASMagicProjectile::ASMagicProjectile()
 	
 	EffectComponent = CreateDefaultSubobject<UParticleSystemComponent>("EffectComponent");
 	EffectComponent->SetupAttachment(GetRootComponent());
-
+	
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComponent");
-	ProjectileMovementComponent->InitialSpeed = 1000.0f;
+	ProjectileMovementComponent->InitialSpeed = 1200.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true; 
 	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
@@ -33,7 +33,8 @@ ASMagicProjectile::ASMagicProjectile()
 void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	// Prevents the projectile from stopping if it detects the instigator
+	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
 }
 
 // Called every frame

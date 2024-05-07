@@ -26,7 +26,7 @@ void ASItemChest::BeginPlay()
 
 void ASItemChest::Interact_Implementation(APawn* InstigatorPawn)
 {
-	LidMesh->SetRelativeRotation(FRotator(TargetPitch, 0.0f,0.0f));
+	// LidMesh->SetRelativeRotation(FRotator(TargetPitch, 0.0f,0.0f));
 }
 
 // Called every frame

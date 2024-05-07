@@ -9,10 +9,11 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Animation/AnimMontage.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Libraries/DebugUtilityFunctions.h"
-#include "Libraries/DebugMacros.h"
+
 
 
 
@@ -31,6 +32,9 @@ ASCharacter::ASCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
+	// Interaction
+	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>(TEXT("InteractionComponent"));
+	
 	// Movement Behavior
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -78,8 +82,25 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASCharacter::Jump);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASCharacter::Look);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASCharacter::Attack);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASCharacter::Interact);
 	}
 
+}
+
+void ASCharacter::PrimaryAttack_TimeElapsed() const
+{ 
+	// The transform combines the location of the socket with the look rotation of the controller
+	const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
+	const FTransform SpawnTM = FTransform(GetControlRotation(),SpawnLocation);
+
+	// Spawning the actor
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	// Removing the const from "this" by using const_cast
+	APawn* CharacterAsPawn = Cast<APawn>(const_cast<ASCharacter*>(this));
+	SpawnParams.Instigator = CharacterAsPawn;
+	// No need to store in array or store it can just use GetWorld()
+	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
 }
 
 void ASCharacter::Move(const FInputActionValue& Value)
@@ -136,15 +157,16 @@ void ASCharacter::Jump()
 void ASCharacter::Attack(const FInputActionValue& Value)
 {
 
-	const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
-	
-	const FTransform SpawnTM = FTransform(GetControlRotation(),SpawnLocation);
-	
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	PlayAnimMontage(AttackAnim);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+	// GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+}
 
-	
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
-	
+void ASCharacter::Interact(const FInputActionValue& Value)
+{
+	if(InteractionComponent)
+	{
+		InteractionComponent->PrimaryInteract();
+	}
 }
 

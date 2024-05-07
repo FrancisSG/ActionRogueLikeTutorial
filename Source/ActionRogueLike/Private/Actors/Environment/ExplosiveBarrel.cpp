@@ -3,7 +3,6 @@
 
 #include "Actors/Environment/ExplosiveBarrel.h"
 
-#include "Libraries/DebugMacros.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
@@ -20,22 +19,24 @@ AExplosiveBarrel::AExplosiveBarrel()
 	
 	RadialForceComponent = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComponent"));
 	RadialForceComponent->SetupAttachment(GetRootComponent());
-	RadialForceComponent->ImpulseStrength = 100000.0f;
+	RadialForceComponent->bImpulseVelChange = true;
+	RadialForceComponent->ImpulseStrength = 2500.0f;
 	RadialForceComponent->ForceStrength = 20.0f;
-	RadialForceComponent->Radius = 1500.0f;
-
+	RadialForceComponent->Radius = 750.0f;
+	RadialForceComponent->AddCollisionChannelToAffect(ECC_WorldDynamic);
+	
 	ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
 	ParticleSystemComponent->SetupAttachment(GetRootComponent());
 	ParticleSystemComponent->bAutoActivate = false;
+
+	// Binding either in Constructor() or in PostInitializeComponents() below
+	// StaticMeshComponent->OnComponentHit.AddDynamic(this, &AExplosiveBarrel::Explode);
 }
 
 // Called when the game starts or when spawned
 void AExplosiveBarrel::BeginPlay()
 {
 	Super::BeginPlay();
-
-	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AExplosiveBarrel::Explode);
-	
 }
 
 void AExplosiveBarrel::Explode(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -51,6 +52,14 @@ void AExplosiveBarrel::CleanUpBarrel()
 {
 	StaticMeshComponent->SetHiddenInGame(true);
 	SetActorEnableCollision(false);
+}
+
+// This runs before the Begin play and after the construction so it's in between
+void AExplosiveBarrel::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AExplosiveBarrel::Explode);
+
 }
 
 
