@@ -44,9 +44,14 @@ void AExplosiveBarrel::Explode(UPrimitiveComponent* HitComponent, AActor* OtherA
 {
 	RadialForceComponent->FireImpulse();
 	ParticleSystemComponent->Activate();
+
+	DrawDebugString(GetWorld(), Hit.ImpactPoint,FString("Exploded!!") ,nullptr, FColor::Green, 12.0f);
+	
 	// Hides the barrel actor ("Destroying it")
 	CleanUpBarrel();
 }
+
+
 
 void AExplosiveBarrel::CleanUpBarrel()
 {

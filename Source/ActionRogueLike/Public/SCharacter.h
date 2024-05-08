@@ -34,9 +34,12 @@ protected:
 	TObjectPtr<USInteractionComponent> InteractionComponent;
 	// References
 
-	UPROPERTY(EditAnywhere, Category = "References")
+	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
 	TSubclassOf<AActor> ProjectileClass;
 
+	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
+	TSubclassOf<AActor> BlackHoleProjectileClass;
+	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TObjectPtr<UAnimMontage> AttackAnim;
 	

@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "PhysicsEngine/RadialForceComponent.h"
 
 // Sets default values
 ASMagicProjectile::ASMagicProjectile()
@@ -26,16 +27,36 @@ ASMagicProjectile::ASMagicProjectile()
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true; 
 	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
 
-	
+	RadialForceComponent = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComponent"));
+	RadialForceComponent->SetupAttachment(GetRootComponent());
+	RadialForceComponent->bImpulseVelChange = true;
+	RadialForceComponent->ImpulseStrength = 500.0f;
+	RadialForceComponent->ForceStrength = 10.0f;
+	RadialForceComponent->Radius = 100.0f;
+	RadialForceComponent->AddCollisionChannelToAffect(ECC_WorldDynamic);
 }
 
 // Called when the game starts or when spawned
 void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ASMagicProjectile::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 	// Prevents the projectile from stopping if it detects the instigator
 	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
+	SphereComponent->OnComponentHit.AddDynamic(this, &ASMagicProjectile::ProjectileHit);
 }
+
+void ASMagicProjectile::ProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	RadialForceComponent->FireImpulse();
+	UE_LOG(LogTemp, Log, TEXT("Projectile hit!"));
+}
+
 
 // Called every frame
 void ASMagicProjectile::Tick(float DeltaTime)

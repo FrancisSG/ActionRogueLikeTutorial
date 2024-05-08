@@ -90,8 +90,28 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ASCharacter::PrimaryAttack_TimeElapsed() const
 { 
 	// The transform combines the location of the socket with the look rotation of the controller
-	const FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
-	const FTransform SpawnTM = FTransform(GetControlRotation(),SpawnLocation);
+
+	// Line tracing for potential targets
+	FHitResult Hit;
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	const FVector HandLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
+
+	// Line tracing vectors
+	const FVector TraceStart = CameraComponent->GetComponentLocation();
+	const FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 3000.0f);
+	
+	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, TraceStart, TraceEnd, ObjectQueryParams);
+	
+	/*FColor LineColor = bBlockingHit ? FColor::Green : FColor::Red;
+	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, LineColor, false, 3.0f, 0, 2.0f);*/
+
+	// If the trace has found a target, use the impact point as destination otherwise use the trace end which his less accurate
+	const FRotator SpawnRotation = bBlockingHit ? (Hit.ImpactPoint - HandLocation).Rotation() : (Hit.TraceEnd - HandLocation).Rotation();
+
+	// Instantiating a transform for the projectile's spawn
+	const FTransform SpawnTM = FTransform(SpawnRotation,HandLocation);
 
 	// Spawning the actor
 	FActorSpawnParameters SpawnParams;
