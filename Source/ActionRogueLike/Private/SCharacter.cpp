@@ -8,6 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Actors/Projectiles/ProjectileBase.h"
 #include "Components/InputComponent.h"
 #include "Components/SInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -46,7 +47,7 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	CurrentProjectile = ProjectileClass;
 	// Adding core movement input mapping context
 	if(const APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
@@ -83,6 +84,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASCharacter::Look);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASCharacter::Attack);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASCharacter::Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASCharacter::Interact);
+		EnhancedInputComponent->BindAction(AbilityShortcut_01_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_01);
+		EnhancedInputComponent->BindAction(AbilityShortcut_02_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_02);
+		EnhancedInputComponent->BindAction(AbilityShortcut_03_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_03);
+
 	}
 
 }
@@ -119,8 +125,9 @@ void ASCharacter::PrimaryAttack_TimeElapsed() const
 	// Removing the const from "this" by using const_cast
 	APawn* CharacterAsPawn = Cast<APawn>(const_cast<ASCharacter*>(this));
 	SpawnParams.Instigator = CharacterAsPawn;
+	SpawnParams.Owner = CharacterAsPawn;
 	// No need to store in array or store it can just use GetWorld()
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	GetWorld()->SpawnActor<AActor>(CurrentProjectile, SpawnTM, SpawnParams);
 }
 
 void ASCharacter::Move(const FInputActionValue& Value)
@@ -184,9 +191,36 @@ void ASCharacter::Attack(const FInputActionValue& Value)
 
 void ASCharacter::Interact(const FInputActionValue& Value)
 {
-	if(InteractionComponent)
+	if(ensure(InteractionComponent))
 	{
 		InteractionComponent->PrimaryInteract();
 	}
 }
+
+void ASCharacter::AbilityShortcut_01(const FInputActionValue& Value)
+{
+	if(ensure(ProjectileClass))
+	{
+		CurrentProjectile = ProjectileClass;
+	}
+}
+
+void ASCharacter::AbilityShortcut_02(const FInputActionValue& Value)
+{
+	if(ensure(BlinkProjectileClass))
+	{
+		CurrentProjectile = BlackHoleProjectileClass;
+	}
+}
+
+void ASCharacter::AbilityShortcut_03(const FInputActionValue& Value)
+{
+	if(ensure(BlinkProjectileClass))
+	{
+		CurrentProjectile = BlinkProjectileClass;
+	}
+}
+
+
+
 

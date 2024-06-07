@@ -3,33 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ProjectileBase.h"
-#include "GameFramework/Actor.h"
-#include "SMagicProjectile.generated.h"
-
-class URadialForceComponent;
-class UProjectileMovementComponent;
-class USphereComponent;
-
-#define Projectile ECollisionChannel::ECC_GameTraceChannel1
+#include "Actors/Projectiles/ProjectileBase.h"
+#include "SBlinkProjectile.generated.h"
 
 UCLASS()
-class ACTIONROGUELIKE_API ASMagicProjectile : public AProjectileBase
+class ACTIONROGUELIKE_API ASBlinkProjectile : public AProjectileBase
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
-	ASMagicProjectile();
+	ASBlinkProjectile();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
 	virtual void ProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
+
+	FTimerHandle ProjectileTimer;
+
+	virtual void InitialExplosion();
+	virtual void SecondExplosion();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UParticleSystemComponent> ExplosionEffectComponent;
 	
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };

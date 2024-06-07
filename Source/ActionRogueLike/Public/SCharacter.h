@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class AProjectileBase;
 class USInteractionComponent;
 class UInputAction;
 class UAnimMontage;
@@ -35,10 +36,13 @@ protected:
 	// References
 
 	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
-	TSubclassOf<AActor> ProjectileClass;
+	TSubclassOf<AProjectileBase> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
-	TSubclassOf<AActor> BlackHoleProjectileClass;
+	TSubclassOf<AProjectileBase> BlackHoleProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
+	TSubclassOf<AProjectileBase> BlinkProjectileClass;
 	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TObjectPtr<UAnimMontage> AttackAnim;
@@ -57,8 +61,16 @@ protected:
 	TObjectPtr<UInputAction> AttackAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> InteractAction;
-
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AbilityShortcut_01_Action;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AbilityShortcut_02_Action;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AbilityShortcut_03_Action;
+	
 	FTimerHandle TimerHandle_PrimaryAttack;
+
+	TSubclassOf<AProjectileBase> CurrentProjectile;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -89,4 +101,10 @@ protected:
 
 	/** Called when pressing the interact key **/
 	virtual void Interact(const FInputActionValue& Value);
+
+	/** Abilities switcher function **/
+	virtual void AbilityShortcut_01(const FInputActionValue& Value);
+	virtual void AbilityShortcut_02(const FInputActionValue& Value);
+	virtual void AbilityShortcut_03(const FInputActionValue& Value);
+	
 };
