@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class USActionComponent;
 class AProjectileBase;
 class USInteractionComponent;
 class UInputAction;
@@ -34,18 +35,13 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USInteractionComponent> InteractionComponent;
 	// References
-
-	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
-	TSubclassOf<AProjectileBase> ProjectileClass;
-
 	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
 	TSubclassOf<AProjectileBase> BlackHoleProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category = "References|Projectiles")
 	TSubclassOf<AProjectileBase> BlinkProjectileClass;
 	
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TObjectPtr<UAnimMontage> AttackAnim;
+	
 	
 	// Input Variables
 	
@@ -67,10 +63,14 @@ protected:
 	TObjectPtr<UInputAction> AbilityShortcut_02_Action;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AbilityShortcut_03_Action;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SprintAction;
 	
-	FTimerHandle TimerHandle_PrimaryAttack;
+	FName CurrentProjectileAbilityName = FName("PrimaryAttack");
 
-	TSubclassOf<AProjectileBase> CurrentProjectile;
+	// Ability system component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USActionComponent> ActionComponent;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -83,8 +83,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 protected:
-	void PrimaryAttack_TimeElapsed() const;
-	
 	// Inputs Functions
 
 	/** Called for movement input **/
@@ -106,5 +104,10 @@ protected:
 	virtual void AbilityShortcut_01(const FInputActionValue& Value);
 	virtual void AbilityShortcut_02(const FInputActionValue& Value);
 	virtual void AbilityShortcut_03(const FInputActionValue& Value);
-	
+
+	void SprintStart(const FInputActionValue& Value);
+	void SprintEnd(const FInputActionValue& Value);
+
+	// GetPawnViewLocation to get camera component
+	virtual FVector GetPawnViewLocation() const override;
 };

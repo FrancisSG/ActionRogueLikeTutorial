@@ -13,6 +13,7 @@
 #include "Components/SInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimMontage.h"
+#include "Components/SActionComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -39,7 +40,9 @@ ASCharacter::ASCharacter()
 	// Movement Behavior
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	
+
+	// Ability Component
+	ActionComponent = CreateDefaultSubobject<USActionComponent>(TEXT("ActionComponent"));
 	
 }
 
@@ -47,7 +50,7 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	CurrentProjectile = ProjectileClass;
+	// CurrentProjectile = ProjectileClass;
 	// Adding core movement input mapping context
 	if(const APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
@@ -88,46 +91,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(AbilityShortcut_01_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_01);
 		EnhancedInputComponent->BindAction(AbilityShortcut_02_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_02);
 		EnhancedInputComponent->BindAction(AbilityShortcut_03_Action, ETriggerEvent::Triggered, this, &ASCharacter::AbilityShortcut_03);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASCharacter::SprintStart);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASCharacter::SprintEnd);
 
 	}
 
-}
-
-void ASCharacter::PrimaryAttack_TimeElapsed() const
-{ 
-	// The transform combines the location of the socket with the look rotation of the controller
-
-	// Line tracing for potential targets
-	FHitResult Hit;
-	FCollisionObjectQueryParams ObjectQueryParams;
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-	const FVector HandLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
-
-	// Line tracing vectors
-	const FVector TraceStart = CameraComponent->GetComponentLocation();
-	const FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 3000.0f);
-	
-	bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, TraceStart, TraceEnd, ObjectQueryParams);
-	
-	/*FColor LineColor = bBlockingHit ? FColor::Green : FColor::Red;
-	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, LineColor, false, 3.0f, 0, 2.0f);*/
-
-	// If the trace has found a target, use the impact point as destination otherwise use the trace end which his less accurate
-	const FRotator SpawnRotation = bBlockingHit ? (Hit.ImpactPoint - HandLocation).Rotation() : (Hit.TraceEnd - HandLocation).Rotation();
-
-	// Instantiating a transform for the projectile's spawn
-	const FTransform SpawnTM = FTransform(SpawnRotation,HandLocation);
-
-	// Spawning the actor
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	// Removing the const from "this" by using const_cast
-	APawn* CharacterAsPawn = Cast<APawn>(const_cast<ASCharacter*>(this));
-	SpawnParams.Instigator = CharacterAsPawn;
-	SpawnParams.Owner = CharacterAsPawn;
-	// No need to store in array or store it can just use GetWorld()
-	GetWorld()->SpawnActor<AActor>(CurrentProjectile, SpawnTM, SpawnParams);
 }
 
 void ASCharacter::Move(const FInputActionValue& Value)
@@ -183,10 +151,7 @@ void ASCharacter::Jump()
 
 void ASCharacter::Attack(const FInputActionValue& Value)
 {
-
-	PlayAnimMontage(AttackAnim);
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
-	// GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+	ActionComponent->StartActionByName(this, CurrentProjectileAbilityName);
 }
 
 void ASCharacter::Interact(const FInputActionValue& Value)
@@ -199,26 +164,35 @@ void ASCharacter::Interact(const FInputActionValue& Value)
 
 void ASCharacter::AbilityShortcut_01(const FInputActionValue& Value)
 {
-	if(ensure(ProjectileClass))
-	{
-		CurrentProjectile = ProjectileClass;
-	}
+	CurrentProjectileAbilityName = FName("PrimaryAttack");
 }
 
 void ASCharacter::AbilityShortcut_02(const FInputActionValue& Value)
 {
-	if(ensure(BlinkProjectileClass))
-	{
-		CurrentProjectile = BlackHoleProjectileClass;
-	}
+	CurrentProjectileAbilityName = FName("BlackHole");
 }
 
 void ASCharacter::AbilityShortcut_03(const FInputActionValue& Value)
 {
-	if(ensure(BlinkProjectileClass))
-	{
-		CurrentProjectile = BlinkProjectileClass;
-	}
+	CurrentProjectileAbilityName = FName("Blink");
+
+}
+
+void ASCharacter::SprintStart(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Started Sprint"));
+	ActionComponent->StartActionByName(this, "Sprint");
+}
+
+void ASCharacter::SprintEnd(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stopped Sprint"));
+	ActionComponent->StopActionByName(this, "Sprint");
+}
+
+FVector ASCharacter::GetPawnViewLocation() const
+{
+return CameraComponent->GetComponentLocation();
 }
 
 
