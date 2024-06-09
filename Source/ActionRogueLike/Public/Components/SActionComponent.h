@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "SActionComponent.generated.h"
-
 
 class USAction;
 
@@ -25,17 +25,23 @@ protected:
 	TArray<USAction*> Actions;
 	
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tags")
+	FGameplayTagContainer ActiveGameplayTags;
+	
 	// Sets default values for this component's properties
 	USActionComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	void AddAction(TSubclassOf<USAction> ActionClass);
+	void AddAction(TSubclassOf<USAction> ActionClass, AActor* Instigator);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool StartActionByName(AActor* Instigator, FName ActionName);
 
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	bool StopActionByName(AActor* Instigator, FName ActionName);
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void RemoveAction(USAction* ActionToRemove);
 	
 protected:
 	// Called when the game starts
